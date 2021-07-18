@@ -109,7 +109,57 @@ exports.postBookHandler = (request, h) => {
 
 exports.getAllBooksHandler = (request, h) => {
   try {
-    const responseBooks = books.map(({ id, name, publisher }) => ({ id, name, publisher }));
+    console.log('books aray now: ', books);
+    const { name, reading, finished } = request.query;
+    console.log(`name: ${name}, reading: ${reading}, finished: ${finished}`);
+
+    // if query(ies) available, return complete books data that matched query(ies)
+    if (name || reading || finished) {
+      // filtering books based on query(ies)
+      const foundBooks = books.filter((book) => {
+        const normalizedBookName = book.name.trim().toLowerCase();
+        console.log(`normalized book name: ${normalizedBookName}`);
+
+        let filterByName = true;
+        let filterByReading = true;
+        let filterByFinished = true;
+
+        if (name) {
+          const normalizedQueryName = name.trim().toLowerCase();
+
+          filterByName = normalizedBookName.indexOf(normalizedQueryName) !== -1;
+        }
+
+        if (reading) {
+          filterByReading = +book.reading === +reading;
+          console.log(`filter by reading: ${filterByReading} with params ${+book.reading} and ${+reading}`);
+        }
+
+        if (finished) {
+          filterByFinished = +book.finished === +finished;
+          console.log(`filter by finished: ${filterByFinished} with params ${+book.finished} and ${+finished}`);
+        }
+
+        console.log(`verdict for book ${book.name} is ${filterByName && filterByReading && filterByFinished}`);
+        return filterByName && filterByReading && filterByFinished;
+      });
+
+      console.log('found books: ', foundBooks);
+
+      // response with returned books that matched query(ies)
+      return h.response({
+        status: 'success',
+        data: { books: foundBooks },
+      });
+    }
+
+    // return selected books data if no query available
+    const responseBooks = books.map((book) => ({
+      id: book.id,
+      name: book.name,
+      publisher: book.publisher,
+    }));
+
     return h.response({
       status: 'success',
       data: { books: responseBooks },
