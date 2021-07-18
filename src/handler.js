@@ -40,40 +40,6 @@ exports.postBookHandler = (request, h) => {
     const finished = readPage === pageCount;
     const id = nanoid(16);
 
-    // check if book already in book array
-    const bookIndex = books.findIndex((book) => book.name === name);
-    if (bookIndex !== -1) {
-      // update book array
-      const updatedAt = new Date().toISOString();
-      const { insertedAt } = books[bookIndex];
-
-      const updatedBook = {
-        name,
-        year,
-        author,
-        summary,
-        publisher,
-        pageCount,
-        readPage,
-        finished,
-        reading,
-        updatedAt,
-        insertedAt,
-      };
-
-      books[bookIndex] = updatedBook;
-
-      console.log('books is updated: ', books);
-      console.log('updated book: ', updatedBook);
-      console.log('book index: ', bookIndex);
-
-      // return update book response
-      return h.response({
-        status: 'success',
-        message: 'Buku berhasil diupdate',
-      }).code(200);
-    }
-
     const updatedAt = new Date().toISOString();
     const insertedAt = updatedAt;
 
