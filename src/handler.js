@@ -110,11 +110,34 @@ exports.postBookHandler = (request, h) => {
   }
 };
 
-exports.getAllBooksHandler = (response, h) => {
+exports.getAllBooksHandler = (request, h) => {
   try {
     return h.response({
       status: 'success',
       data: { books },
+    }).code(200);
+  } catch (error) {
+    console.log(error);
+  }
+};
+
+exports.getBookHandler = (request, h) => {
+  try {
+    const { id } = request.payload;
+
+    const bookIndex = books.findIndex((book) => book.id === id);
+
+    if (bookIndex === -1) {
+      h.response({
+        status: 'fail',
+        message: 'Buku tidak ditemukan',
+      }).code(404);
+    }
+
+    const book = books[bookIndex];
+    return h.response({
+      status: 'success',
+      data: book,
     }).code(200);
   } catch (error) {
     console.log(error);
