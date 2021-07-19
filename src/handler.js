@@ -111,11 +111,16 @@ exports.getAllBooksHandler = (request, h) => {
       });
 
       console.log('found books: ', foundBooks);
+      const foundBooksResp = foundBooks.map((book) => ({
+        id: book.id,
+        name: book.name,
+        publisher: book.publisher,
+      }));
 
       // response with returned books that matched query(ies)
       return h.response({
         status: 'success',
-        data: { books: foundBooks },
+        data: { books: foundBooksResp },
       });
     }
 
@@ -159,38 +164,56 @@ exports.getBookHandler = (request, h) => {
 };
 
 exports.updateBookHandler = (request, h) => {
-  const { name, readPage } = request.payload;
-  const { bookId } = request.params;
+  try {
+    const bookToUpdate = request.payload;
+    const { bookId } = request.params;
+    console.log(`updateBookHandler query name: ${bookToUpdate.name}, readPage: ${bookToUpdate.readPage}, bookId ${bookId}`);
+    console.log('request.payload on updateBookHandler: ', request.payload);
 
-  const targetBookIndex = books.findIndex((book) => book.id === bookId);
+    const targetBookIndex = books.findIndex((book) => book.id === bookId);
+    console.log(`targetBookIndex: ${targetBookIndex}`);
 
-  if (targetBookIndex === -1) {
+    if (targetBookIndex === -1) {
+      return h.response({
+        status: 'fail',
+        message: 'Gagal memperbarui buku. Id tidak ditemukan',
+      }).code(404);
+    }
+
+    if (!bookToUpdate.name) {
+      return h.response({
+        status: 'fail',
+        message: 'Gagal memperbarui buku. Mohon isi nama buku',
+      }).code(400);
+    }
+
+    if (bookToUpdate.readPage > bookToUpdate.pageCount) {
+      return h.response({
+        status: 'fail',
+        message: 'Gagal memperbarui buku. readPage tidak boleh lebih besar dari pageCount',
+      }).code(400);
+    }
+
+    const finished = bookToUpdate.readPage === bookToUpdate.pageCount;
+
+    const updatedBook = {
+      ...books[targetBookIndex],
+      ...bookToUpdate,
+      finished,
+    };
+
+    console.log('updated book: ', updatedBook);
+    console.log('oldBooks: ', books);
+    books[targetBookIndex] = updatedBook;
+    console.log('updatedBooks: ', books);
+
     return h.response({
-      status: 'fail',
-      message: 'Gagal memperbarui buku. Id tidak ditemukan',
-    }).code(404);
+      status: 'success',
+      message: 'Buku berhasil diperbarui',
+    }).code(200);
+  } catch (error) {
+    console.log(error);
   }
-
-  if (!name) {
-    return h.response({
-      status: 'fail',
-      message: 'Gagal memperbarui buku. Mohon isi nama buku',
-    }).code(400);
-  }
-
-  if (readPage > books[targetBookIndex]) {
-    return h.response({
-      status: 'fail',
-      message: 'Gagal memperbarui buku. readPage tidak boleh lebih besar dari pageCount',
-    }).code(400);
-  }
-
-  books[targetBookIndex] = request.payload;
-
-  return h.response({
-    status: 'success',
-    message: 'Buku berhasil diperbarui',
-  }).code(200);
 };
 
 exports.deleteBookHandler = (request, h) => {
